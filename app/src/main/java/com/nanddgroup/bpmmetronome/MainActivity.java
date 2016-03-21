@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void reloadService() {
         stopService(intent);
-        startService(intent);
+        startService(intent)
     }
 
     private void putInIntent() {
