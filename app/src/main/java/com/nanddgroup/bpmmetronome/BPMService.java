@@ -20,8 +20,9 @@ public class BPMService extends Service {
     private Thread thread;
     private android.hardware.Camera camera;
     private android.hardware.Camera.Parameters params;
-    private boolean isFlashlightOn;
+    public static boolean isFlashlightOn;
     private boolean isCameraFlash;
+    public static boolean isVibrateOn;
 
     public BPMService() {
     }
@@ -41,7 +42,7 @@ public class BPMService extends Service {
             stopSelf();
         }
 
-        return START_NOT_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
     @Override
@@ -58,6 +59,7 @@ public class BPMService extends Service {
         //Vibration stuff
         //>>
         if (intent.getExtras().getInt(MainActivity.sivVIBRATION_INDEX) == 1) {
+            isVibrateOn = true;
             thread = new Thread(new Runnable() {
                  @Override
                  public void run() {
@@ -126,12 +128,12 @@ public class BPMService extends Service {
         super.onDestroy();
         isServiceWork = false;
         vibrator.cancel();
+        isVibrateOn = false;
         if(isFlashlightOn) {
             setFlashlightOff();
             camera.release();
             camera = null;
         }
-        stopSelf();
         Toast.makeText(getApplicationContext(), "onDestroy", Toast.LENGTH_SHORT).show();
     }
 }

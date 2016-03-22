@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         listenerHelper = new ListenerHelper(etBpm, dsbBPM);
         listenerHelper.init();
         checkServiceEnabled();
+        checkFlashlight();
+        checkVibrator();
         listenerHelper.setListener(new iOnDSCchange() {
             @Override
             public void listen(int value) {
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.ivLightning)
     public void ivLightningClicked() {
+        Toast.makeText(getApplicationContext(), "" + ivLightning_index, Toast.LENGTH_SHORT).show();
         if (ivLightning_index == 0) {
             ivLightning.setImageResource(R.drawable.lightning_black);
             ivLightning_index = 1;
@@ -117,7 +120,8 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.bService)
     public void bServiceClicked() {
         putInIntent();
-        if (ivVibration_index == 0 && ivLightning_index == 0 && ivSound_index == 0) {
+        if (ivVibration_index == 0 && ivLightning_index == 0 && ivSound_index == 0 &&
+                BPMService.isServiceWork == false) {
             Toast.makeText(getApplicationContext(),
                     "Choose some type of action.", Toast.LENGTH_SHORT).show();
         } else {
@@ -147,6 +151,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void checkFlashlight() {
+
+        if (BPMService.isFlashlightOn == true) {
+            ivLightning.setImageResource(R.drawable.lightning_black);
+            ivLightning_index = 1;
+        } else {
+            ivLightning.setImageResource(R.drawable.lightning_white);
+            ivLightning_index = 0;
+        }
+    }
+
+    private void checkVibrator() {
+
+        if (BPMService.isVibrateOn == true) {
+            ivVibration.setImageResource(R.drawable.vibration_black);
+            ivVibration_index = 1;
+        } else {
+            ivVibration.setImageResource(R.drawable.vibration_white);
+            ivVibration_index = 0;
+        }
+    }
     private void checkServiceEnabledStraight() {
         if (!BPMService.isServiceWork) {
             bService.setText("STOP");
