@@ -1,11 +1,8 @@
 package com.nanddgroup.bpmmetronome;
 
-import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.IBinder;
 import android.os.Vibrator;
@@ -17,11 +14,13 @@ public class BPMService extends Service {
     private Intent intent;
     private String sbpm;
     private Vibrator vibrator;
-    private Thread thread;
+    private Thread threadV;
+    private Thread threadF;
     private android.hardware.Camera camera;
     private android.hardware.Camera.Parameters params;
     public static boolean isFlashlightOn;
-    private boolean isCameraFlash;
+    public static boolean isFlashlightWorks;
+    // private boolean isCameraFlash;
     public static boolean isVibrateOn;
 
     public BPMService() {
@@ -41,7 +40,6 @@ public class BPMService extends Service {
             Toast.makeText(getApplicationContext(), "BPM can't be 0.", Toast.LENGTH_SHORT).show();
             stopSelf();
         }
-
         return START_REDELIVER_INTENT;
     }
 
@@ -52,75 +50,97 @@ public class BPMService extends Service {
         Toast.makeText(getApplicationContext(), "onCreate", Toast.LENGTH_SHORT).show();
         vibrator = (Vibrator) getApplicationContext()
                 .getSystemService(Context.VIBRATOR_SERVICE);
-
     }
 
     private void startAction(Intent intent, final Vibrator v, final int time) {
+
+        initThreads(time, v);
         //Vibration stuff
         //>>
         if (intent.getExtras().getInt(MainActivity.sivVIBRATION_INDEX) == 1) {
             isVibrateOn = true;
-            thread = new Thread(new Runnable() {
-                 @Override
-                 public void run() {
-                         Log.e("(30000 / time )  : ", String.valueOf(30000 / time));
-                         long [] paretn = {0, (30000 / time ), (30000 / time )};
-                         v.vibrate(paretn, 1);
-                 }
-             });
-            thread.start();
+            threadV.start();
         }
         //>>
 
         //Flashlight suff
         //>>
         if (intent.getExtras().getInt(MainActivity.sivLIGHTNING_INDEX) == 1) {
-            isCameraFlash = getApplicationContext().getPackageManager()
-                    .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
-            if(!isCameraFlash) {
-                showCameraAlert();
-            } else {
-                camera = android.hardware.Camera.open();
-                params = camera.getParameters();
-            }
+//            isCameraFlash = getApplicationContext().getPackageManager()
+//                    .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+            initCamera();
 
-            if(isFlashlightOn) {
-                setFlashlightOff();
-            } else {
-                setFlashlightOn();
-            }
+            Log.e("flashlight", String.valueOf(isFlashlightOn));
+
+            threadF.start();
         }
         //>>
     }
 
-    private void showCameraAlert() {
-        new AlertDialog.Builder(this)
-                .setTitle("Error: No Camera Flash!")
-                .setMessage("Camera flashlight not available in this Android device!")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+    private void initCamera() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                       stopSelf();
+        if (camera == null) {
+            BPMService.isFlashlightWorks = true;
+            camera = Camera.open();
+            params = camera.getParameters();
+        } else {
+            return;
+        }
+    }
+
+    private void initThreads(final int time, final Vibrator v) {
+
+        threadV = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.e("(30000 / time )  : ", String.valueOf(30000 / time));
+                long[] paretn = {0, (30000 / time), (30000 / time)};
+                v.vibrate(paretn, 1);
+            }
+        });
+
+        threadF = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (isFlashlightWorks) {
+                    if (isFlashlightOn) {
+                        setFlashlightOff();
+                    } else {
+                        setFlashlightOn();
                     }
-                })
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show();
+                    try {
+                        Thread.sleep(30000 / time);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        });
     }
 
     private void setFlashlightOn() {
-        params = camera.getParameters();
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-        camera.setParameters(params);
-        camera.startPreview();
-        isFlashlightOn = true;
+        if (camera == null || params == null) {
+            return;
+        } else {
+            //params = camera.getParameters();
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            camera.setParameters(params);
+            camera.startPreview();
+            isFlashlightOn = true;
+        }
     }
 
     private void setFlashlightOff() {
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        camera.setParameters(params);
-        camera.stopPreview();
-        isFlashlightOn = false;
+        if (camera == null || params == null) {
+            return;
+        } else {
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+            camera.setParameters(params);
+            camera.stopPreview();
+            isFlashlightOn = false;
+        }
+
     }
 
     @Override
@@ -129,8 +149,9 @@ public class BPMService extends Service {
         isServiceWork = false;
         vibrator.cancel();
         isVibrateOn = false;
-        if(isFlashlightOn) {
-            setFlashlightOff();
+        setFlashlightOff();
+        BPMService.isFlashlightWorks = false;
+        if (camera != null) {
             camera.release();
             camera = null;
         }

@@ -34,7 +34,7 @@ public class ListenerHelper {
 
             @Override
             public void onStopTrackingTouch(DiscreteSeekBar seekBar) {
-                listener.listen(seekBar.getProgress());
+                //listener.listen(seekBar.getProgress());
             }
         });
         etBpm.addTextChangedListener(new TextWatcher() {
@@ -61,6 +61,7 @@ public class ListenerHelper {
                     etBpm.setText("100");
                     dsbBPM.setProgress(100);
                 }
+                //listener.listen(Integer.parseInt(s.toString()));
             }
         });
     }

@@ -50,16 +50,16 @@ public class MainActivity extends AppCompatActivity {
         checkServiceEnabled();
         checkFlashlight();
         checkVibrator();
-        listenerHelper.setListener(new iOnDSCchange() {
-            @Override
-            public void listen(int value) {
-                putInIntent();
-                stopService(intent);
-                if (bService.getText().equals("STOP")) {
-                    startService(intent);
-                }
-            }
-        });
+//        listenerHelper.setListener(new iOnDSCchange() {
+//            @Override
+//            public void listen(int value) {
+//                putInIntent();
+//                stopService(intent);
+//                if (bService.getText().equals("STOP")) {
+//                    startService(intent);
+//                }
+//            }
+//        });
     }
 
 
@@ -68,19 +68,11 @@ public class MainActivity extends AppCompatActivity {
         if (ivVibration_index == 0) {
             ivVibration.setImageResource(R.drawable.vibration_black);
             ivVibration_index = 1;
-            putInIntent();
-            if (BPMService.isServiceWork) {
-                reloadService();
-                checkServiceEnabled();
-            }
+
         } else {
             ivVibration.setImageResource(R.drawable.vibration_white);
             ivVibration_index = 0;
-            putInIntent();
-            if (BPMService.isServiceWork) {
-                reloadService();
-                checkServiceEnabled();
-            }
+
         }
     }
 
@@ -90,19 +82,13 @@ public class MainActivity extends AppCompatActivity {
         if (ivLightning_index == 0) {
             ivLightning.setImageResource(R.drawable.lightning_black);
             ivLightning_index = 1;
-            putInIntent();
-            if (BPMService.isServiceWork) {
-                reloadService();
-                checkServiceEnabled();
-            }
+            BPMService.isFlashlightOn = true;
+
         } else {
             ivLightning.setImageResource(R.drawable.lightning_white);
             ivLightning_index = 0;
-            putInIntent();
-            if (BPMService.isServiceWork) {
-                reloadService();
-                checkServiceEnabled();
-            }
+            BPMService.isFlashlightOn = false;
+
         }
     }
 
@@ -127,11 +113,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             checkServiceEnabledStraight();
         }
-    }
-
-    private void reloadService() {
-        stopService(intent);
-        startService(intent);
     }
 
     private void putInIntent() {
@@ -172,12 +153,25 @@ public class MainActivity extends AppCompatActivity {
             ivVibration_index = 0;
         }
     }
+
     private void checkServiceEnabledStraight() {
         if (!BPMService.isServiceWork) {
             bService.setText("STOP");
+            ivVibration.setEnabled(false);
+            ivLightning.setEnabled(false);
+            ivSound.setEnabled(false);
+            listenerHelper.dsbBPM.setEnabled(false);
+            listenerHelper.etBpm.setEnabled(false);
+            BPMService.isFlashlightWorks =  true;
             startService(intent);
         } else {
             bService.setText("START");
+            ivVibration.setEnabled(true);
+            ivLightning.setEnabled(true);
+            ivSound.setEnabled(true);
+            listenerHelper.dsbBPM.setEnabled(true);
+            listenerHelper.etBpm.setEnabled(true);
+            BPMService.isFlashlightWorks =  false;
             stopService(intent);
         }
     }
